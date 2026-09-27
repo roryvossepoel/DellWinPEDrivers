@@ -1,6 +1,7 @@
 # DellWinPEDrivers
 
 [![PowerShell Gallery](https://img.shields.io/powershellgallery/v/DellWinPEDrivers?label=PowerShell%20Gallery)](https://www.powershellgallery.com/packages/DellWinPEDrivers)
+[![GitHub Release](https://img.shields.io/github/v/release/roryvossepoel/DellWinPEDrivers?label=GitHub%20Release)](https://github.com/roryvossepoel/DellWinPEDrivers/releases/latest)
 [![CI](https://github.com/roryvossepoel/DellWinPEDrivers/actions/workflows/ci.yml/badge.svg)](https://github.com/roryvossepoel/DellWinPEDrivers/actions/workflows/ci.yml)
 
 `DellWinPEDrivers` is a PowerShell module that discovers and downloads the current Dell Command | Deploy WinPE driver packs from Dell's official Driver Pack Catalog.
