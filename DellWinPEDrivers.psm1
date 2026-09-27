@@ -50,7 +50,7 @@ function Get-DellCatalogDocument {
             throw 'expand.exe was not found.'
         }
 
-        & $expand $cabPath '-F:DriverPackCatalog.xml' $tempRoot
+        & $expand $cabPath $xmlPath
         $expandExitCode = $LASTEXITCODE
         if ($expandExitCode -ne 0 -or -not (Test-Path -LiteralPath $xmlPath)) {
             throw "Failed to extract DriverPackCatalog.xml from Dell catalog CAB. expand.exe exit code: $expandExitCode"
