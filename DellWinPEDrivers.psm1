@@ -75,16 +75,17 @@ function ConvertFrom-DellWinPEPackageNode {
         [string] $BaseLocation
     )
 
-    $operatingSystems = @($Node.SupportedOperatingSystems.OperatingSystem)
+    $operatingSystems = @($Node.SelectNodes("./*[local-name()='SupportedOperatingSystems']/*[local-name()='OperatingSystem']"))
     if ($operatingSystems.Count -eq 0) {
         $operatingSystems = @($null)
     }
 
     $displayName = $null
-    if ($Node.Name -and $Node.Name.Display) {
-        $display = @($Node.Name.Display) | Where-Object { $_.lang -eq 'en' } | Select-Object -First 1
+    $displayNodes = @($Node.SelectNodes("./*[local-name()='Name']/*[local-name()='Display']"))
+    if ($displayNodes.Count -gt 0) {
+        $display = $displayNodes | Where-Object { $_.GetAttribute('lang') -eq 'en' } | Select-Object -First 1
         if (-not $display) {
-            $display = @($Node.Name.Display) | Select-Object -First 1
+            $display = $displayNodes | Select-Object -First 1
         }
         if ($display) {
             $displayName = [string]$display.InnerText
@@ -92,14 +93,15 @@ function ConvertFrom-DellWinPEPackageNode {
     }
 
     $releaseDate = $null
-    if ($Node.dateTime) {
+    $dateTimeValue = [string]$Node.GetAttribute('dateTime')
+    if ($dateTimeValue) {
         [datetime]$parsedDate = [datetime]::MinValue
-        if ([datetime]::TryParse([string]$Node.dateTime, [ref]$parsedDate)) {
+        if ([datetime]::TryParse($dateTimeValue, [ref]$parsedDate)) {
             $releaseDate = $parsedDate
         }
     }
 
-    $packagePath = ([string]$Node.path).TrimStart('/')
+    $packagePath = ([string]$Node.GetAttribute('path')).TrimStart('/')
     $base = $BaseLocation.Trim().TrimEnd('/')
     if ($base -notmatch '^https?://') {
         $base = 'https://' + $base
@@ -110,18 +112,18 @@ function ConvertFrom-DellWinPEPackageNode {
         [pscustomobject]@{
             PSTypeName      = 'DellWinPEDrivers.Package'
             Name            = $displayName
-            Type            = [string]$Node.type
-            DellVersion     = [string]$Node.dellVersion
-            ReleaseId       = [string]$Node.releaseID
+            Type            = [string]$Node.GetAttribute('type')
+            DellVersion     = [string]$Node.GetAttribute('dellVersion')
+            ReleaseId       = [string]$Node.GetAttribute('releaseID')
             ReleaseDate     = $releaseDate
-            Path            = [string]$Node.path
+            Path            = [string]$Node.GetAttribute('path')
             DownloadUrl     = $downloadUrl
-            Architecture    = if ($os) { [string]$os.osArch } else { $null }
-            OSVendor        = if ($os) { [string]$os.osVendor } else { $null }
-            MajorVersion    = if ($os) { [string]$os.majorVersion } else { $null }
-            MinorVersion    = if ($os) { [string]$os.minorVersion } else { $null }
-            SPMajorVersion  = if ($os) { [string]$os.spMajorVersion } else { $null }
-            SPMinorVersion  = if ($os) { [string]$os.spMinorVersion } else { $null }
+            Architecture    = if ($os) { [string]$os.GetAttribute('osArch') } else { $null }
+            OSVendor        = if ($os) { [string]$os.GetAttribute('osVendor') } else { $null }
+            MajorVersion    = if ($os) { [string]$os.GetAttribute('majorVersion') } else { $null }
+            MinorVersion    = if ($os) { [string]$os.GetAttribute('minorVersion') } else { $null }
+            SPMajorVersion  = if ($os) { [string]$os.GetAttribute('spMajorVersion') } else { $null }
+            SPMinorVersion  = if ($os) { [string]$os.GetAttribute('spMinorVersion') } else { $null }
         }
     }
 }
@@ -144,18 +146,21 @@ function Get-DellWinPEDriverPack {
     )
 
     $catalog = Get-DellCatalogDocument -CatalogPath $CatalogPath
-    $manifest = $catalog.DriverPackManifest
-    if (-not $manifest) {
+    $manifest = $catalog.DocumentElement
+
+    if (-not $manifest -or $manifest.LocalName -ne 'DriverPackManifest') {
         throw 'The supplied XML is not a Dell DriverPackCatalog document.'
     }
 
-    $baseLocation = [string]$manifest.baseLocation
+    $baseLocation = [string]$manifest.GetAttribute('baseLocation')
     if ([string]::IsNullOrWhiteSpace($baseLocation)) {
         throw 'Dell catalog does not contain DriverPackManifest.baseLocation.'
     }
 
-    $packages = foreach ($node in @($manifest.DriverPackage)) {
-        if ([string]$node.type -ne 'WinPE') {
+    $packageNodes = @($manifest.SelectNodes("./*[local-name()='DriverPackage']"))
+
+    $packages = foreach ($node in $packageNodes) {
+        if ([string]$node.GetAttribute('type') -ine 'WinPE') {
             continue
         }
 
