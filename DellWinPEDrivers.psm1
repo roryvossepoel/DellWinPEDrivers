@@ -114,7 +114,7 @@ function ConvertFrom-DellWinPEPackageNode {
 
     $winPEVersion = $null
     $versionSource = if ($displayName) { $displayName } else { [string]$Node.GetAttribute('path') }
-    if ($versionSource -match '(?i)WinPE(?<Version>\d+(?:\.\d+)?)') {
+    if ($versionSource -match '(?i)WinPE\s*(?<Version>\d+(?:\.\d+)?)') {
         $winPEVersion = $Matches.Version
     }
 
