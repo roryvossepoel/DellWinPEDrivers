@@ -1,0 +1,75 @@
+name: Create Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (for example 1.0.0)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v5
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Validate version
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          $requestedVersion = '${{ inputs.version }}'
+          if ($requestedVersion -notmatch '^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$') {
+              throw "Invalid release version '$requestedVersion'. Expected a semantic version such as 1.0.0."
+          }
+
+          $manifest = Test-ModuleManifest .\DellWinPEDrivers.psd1 -ErrorAction Stop
+          $manifestVersion = $manifest.Version.ToString()
+
+          if ($manifestVersion -ne $requestedVersion) {
+              throw "Requested release version '$requestedVersion' does not match ModuleVersion '$manifestVersion' in DellWinPEDrivers.psd1."
+          }
+
+          $tag = "v$requestedVersion"
+
+          git fetch --tags
+          if (git tag --list $tag) {
+              throw "Tag '$tag' already exists."
+          }
+
+          "RELEASE_VERSION=$requestedVersion" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "RELEASE_TAG=$tag" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Build module package
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          .\build.ps1 | Format-List
+          Test-ModuleManifest .\out\DellWinPEDrivers\DellWinPEDrivers.psd1 | Out-Null
+
+      - name: Create release archive
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          $archive = "DellWinPEDrivers-$env:RELEASE_VERSION.zip"
+          Compress-Archive -Path .\out\DellWinPEDrivers -DestinationPath $archive -CompressionLevel Optimal
+          "RELEASE_ARCHIVE=$archive" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Create GitHub release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          gh release create $env:RELEASE_TAG $env:RELEASE_ARCHIVE --target main --title "DellWinPEDrivers $env:RELEASE_VERSION" --generate-notes
