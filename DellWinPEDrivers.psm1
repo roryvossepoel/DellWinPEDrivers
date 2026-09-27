@@ -26,7 +26,9 @@ function Get-DellCatalogDocument {
         }
 
         if ([System.IO.Path]::GetExtension($CatalogPath) -ieq '.xml') {
-            return [xml](Get-Content -LiteralPath $CatalogPath -Raw)
+            $document = [xml](Get-Content -LiteralPath $CatalogPath -Raw)
+            Write-Output -NoEnumerate $document
+            return
         }
 
         throw "CatalogPath must point to an extracted DriverPackCatalog.xml file."
@@ -56,7 +58,9 @@ function Get-DellCatalogDocument {
             throw "Failed to extract DriverPackCatalog.xml from Dell catalog CAB. expand.exe exit code: $expandExitCode"
         }
 
-        return [xml](Get-Content -LiteralPath $xmlPath -Raw)
+        $document = [xml](Get-Content -LiteralPath $xmlPath -Raw)
+        Write-Output -NoEnumerate $document
+        return
     }
     finally {
         if (Test-Path -LiteralPath $tempRoot) {
@@ -146,7 +150,16 @@ function Get-DellWinPEDriverPack {
     )
 
     $catalog = Get-DellCatalogDocument -CatalogPath $CatalogPath
-    $manifest = $catalog.DocumentElement
+
+    if ($catalog -is [System.Xml.XmlDocument]) {
+        $manifest = $catalog.DocumentElement
+    }
+    elseif ($catalog -is [System.Xml.XmlElement]) {
+        $manifest = $catalog
+    }
+    else {
+        throw "Unexpected Dell catalog object type: $($catalog.GetType().FullName)"
+    }
 
     if (-not $manifest -or $manifest.LocalName -ne 'DriverPackManifest') {
         throw 'The supplied XML is not a Dell DriverPackCatalog document.'
