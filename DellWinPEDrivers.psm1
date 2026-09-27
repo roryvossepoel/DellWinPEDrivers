@@ -334,7 +334,7 @@ function Save-DellWinPEDriverPack {
 
     $safeName = @(
         'WinPE'
-        if ($selected.MajorVersion) { $selected.MajorVersion }
+        if ($selected.WinPEVersion) { $selected.WinPEVersion }
         if ($selected.DellVersion) { $selected.DellVersion }
         if ($selected.Architecture) { $selected.Architecture }
     ) -join '-'
