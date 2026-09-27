@@ -26,6 +26,14 @@ jobs:
           Set-PSRepository PSGallery -InstallationPolicy Trusted
           Install-Module Pester -MinimumVersion 5.5.0 -Force -Scope CurrentUser
 
+      - name: Validate module manifest
+        shell: powershell
+        run: |
+          $manifest = Test-ModuleManifest ./DellWinPEDrivers.psd1 -ErrorAction Stop
+          if ($manifest.Version -ne [version]'1.0.0') {
+              throw "Unexpected module version: $($manifest.Version)"
+          }
+
       - name: Run tests on Windows PowerShell 5.1
         if: matrix.powershell == '5.1'
         shell: powershell
