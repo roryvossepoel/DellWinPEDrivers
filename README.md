@@ -43,13 +43,13 @@ Filter to x64:
 Get-DellWinPEDriverPack -Architecture x64
 ```
 
-Filter to the current WinPE 11 generation:
+Filter explicitly to WinPE 11:
 
 ```powershell
-Get-DellWinPEDriverPack -Architecture x64 -MajorVersion 10
+Get-DellWinPEDriverPack -Architecture x64 -WinPEVersion '11.0'
 ```
 
-> Dell currently represents WinPE applicability through the operating-system metadata in `DriverPackCatalog.xml`. The module exposes that metadata instead of maintaining its own version map.
+`WinPEVersion` is derived from Dell's own WinPE package name, for example `WinPE11.0-Drivers-A10-XCXDW.cab`. Dell's operating-system applicability metadata uses `majorVersion="10"` for both WinPE 10 and WinPE 11, so `MajorVersion` should not be used to distinguish those WinPE generations.
 
 ### Download a driver pack
 
