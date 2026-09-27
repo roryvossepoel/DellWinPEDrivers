@@ -6,6 +6,8 @@
 
 `DellWinPEDrivers` is a PowerShell module that discovers and downloads the current Dell Command | Deploy WinPE driver packs from Dell's official Driver Pack Catalog.
 
+> **Note:** Version 1.0.1 renamed the discovery command from `Get-DellWinPEDriverPack` to `Get-DellWinPEDriverPackInfo` to avoid a command-name conflict with the OSD PowerShell module.
+
 The module intentionally focuses on **repository discovery and download/extraction**. It does not inject drivers into a Windows PE image.
 
 ## Why
@@ -35,19 +37,19 @@ This means the module does not need to scrape Dell support pages or maintain a s
 ### Discover Dell WinPE driver packs
 
 ```powershell
-Get-DellWinPEDriverPack
+Get-DellWinPEDriverPackInfo
 ```
 
 Filter to x64:
 
 ```powershell
-Get-DellWinPEDriverPack -Architecture x64
+Get-DellWinPEDriverPackInfo -Architecture x64
 ```
 
 Filter explicitly to WinPE 11:
 
 ```powershell
-Get-DellWinPEDriverPack -Architecture x64 -WinPEVersion '11.0'
+Get-DellWinPEDriverPackInfo -Architecture x64 -WinPEVersion '11.0'
 ```
 
 `WinPEVersion` is derived from Dell's own WinPE package name, for example `WinPE11.0-Drivers-A10-XCXDW.cab`. Dell's operating-system applicability metadata uses `majorVersion="10"` for both WinPE 10 and WinPE 11, so `MajorVersion` should not be used to distinguish those WinPE generations.
@@ -101,7 +103,7 @@ Dell documents `DriverPackCatalog.xml` as the machine-readable catalog for curre
 - Windows for CAB extraction through `expand.exe`
 - Internet access to `downloads.dell.com`
 
-`Get-DellWinPEDriverPack` and `New-DellWinPEManifest` can also parse a previously extracted local `DriverPackCatalog.xml` by using `-CatalogPath`.
+`Get-DellWinPEDriverPackInfo` and `New-DellWinPEManifest` can also parse a previously extracted local `DriverPackCatalog.xml` by using `-CatalogPath`.
 
 ## CI
 
