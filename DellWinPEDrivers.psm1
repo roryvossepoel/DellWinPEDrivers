@@ -2,6 +2,17 @@ Set-StrictMode -Version Latest
 
 $script:DellCatalogUrl = 'https://downloads.dell.com/catalog/DriverPackCatalog.cab'
 
+function Test-DellWindows {
+    [CmdletBinding()]
+    param()
+
+    if ($PSVersionTable.PSVersion.Major -lt 6) {
+        return $true
+    }
+
+    return [bool]$IsWindows
+}
+
 function Get-DellCatalogDocument {
     [CmdletBinding()]
     param(
@@ -21,7 +32,7 @@ function Get-DellCatalogDocument {
         throw "CatalogPath must point to an extracted DriverPackCatalog.xml file."
     }
 
-    if (-not $IsWindows -and $PSVersionTable.PSVersion.Major -ge 6) {
+    if (-not (Test-DellWindows)) {
         throw 'Downloading Dell''s CAB catalog requires Windows because expand.exe is used to extract DriverPackCatalog.xml. Supply -CatalogPath with an extracted XML file on non-Windows systems.'
     }
 
