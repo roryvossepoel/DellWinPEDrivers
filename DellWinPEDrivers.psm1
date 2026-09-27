@@ -228,7 +228,13 @@ function New-DellWinPEManifest {
         [string] $CatalogPath
     )
 
-    $packages = @(Get-DellWinPEDriverPack -Architecture $Architecture -MajorVersion $MajorVersion -MinorVersion $MinorVersion -CatalogPath $CatalogPath)
+    $getParams = @{}
+    if ($PSBoundParameters.ContainsKey('Architecture')) { $getParams.Architecture = $Architecture }
+    if ($PSBoundParameters.ContainsKey('MajorVersion')) { $getParams.MajorVersion = $MajorVersion }
+    if ($PSBoundParameters.ContainsKey('MinorVersion')) { $getParams.MinorVersion = $MinorVersion }
+    if ($PSBoundParameters.ContainsKey('CatalogPath')) { $getParams.CatalogPath = $CatalogPath }
+
+    $packages = @(Get-DellWinPEDriverPack @getParams -ErrorAction Stop)
 
     $manifest = [ordered]@{
         SchemaVersion = 1
