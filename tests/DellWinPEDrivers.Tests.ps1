@@ -27,31 +27,31 @@ BeforeAll {
 '@ | Set-Content -LiteralPath $script:CatalogPath -Encoding UTF8
 }
 
-Describe 'Get-DellWinPEDriverPack' {
+Describe 'Get-DellWinPEDriverPackInfo' {
     It 'returns only WinPE packages' {
-        $result = @(Get-DellWinPEDriverPack -CatalogPath $script:CatalogPath)
+        $result = @(Get-DellWinPEDriverPackInfo -CatalogPath $script:CatalogPath)
         $result.Count | Should -Be 2
         ($result.Type | Select-Object -Unique) | Should -Be 'WinPE'
     }
 
     It 'constructs an HTTPS download URL from baseLocation and path' {
-        $result = Get-DellWinPEDriverPack -CatalogPath $script:CatalogPath | Select-Object -First 1
+        $result = Get-DellWinPEDriverPackInfo -CatalogPath $script:CatalogPath | Select-Object -First 1
         $result.DownloadUrl | Should -Be 'https://downloads.dell.com/FOLDER/WinPE11.cab'
     }
 
     It 'filters by architecture and OS version' {
-        $result = @(Get-DellWinPEDriverPack -CatalogPath $script:CatalogPath -Architecture x64 -MajorVersion 10 -MinorVersion 0)
+        $result = @(Get-DellWinPEDriverPackInfo -CatalogPath $script:CatalogPath -Architecture x64 -MajorVersion 10 -MinorVersion 0)
         $result.Count | Should -Be 2
     }
 
     It 'sorts newest package first' {
-        $result = @(Get-DellWinPEDriverPack -CatalogPath $script:CatalogPath)
+        $result = @(Get-DellWinPEDriverPackInfo -CatalogPath $script:CatalogPath)
         $result[0].DellVersion | Should -Be 'A10'
         $result[0].ReleaseId | Should -Be 'XCXDW'
     }
 
     It 'parses WinPEVersion from the Dell package name' {
-        $result = Get-DellWinPEDriverPack -CatalogPath $script:CatalogPath |
+        $result = Get-DellWinPEDriverPackInfo -CatalogPath $script:CatalogPath |
             Where-Object ReleaseId -EQ 'XCXDW' |
             Select-Object -First 1
 
@@ -59,7 +59,7 @@ Describe 'Get-DellWinPEDriverPack' {
     }
 
     It 'filters explicitly by WinPE version' {
-        $result = @(Get-DellWinPEDriverPack -CatalogPath $script:CatalogPath -Architecture x64 -WinPEVersion '11.0')
+        $result = @(Get-DellWinPEDriverPackInfo -CatalogPath $script:CatalogPath -Architecture x64 -WinPEVersion '11.0')
 
         $result.Count | Should -Be 1
         $result[0].ReleaseId | Should -Be 'XCXDW'
@@ -67,7 +67,7 @@ Describe 'Get-DellWinPEDriverPack' {
     }
 
     It 'parses a Dell catalog that uses the production XML namespace' {
-        { Get-DellWinPEDriverPack -CatalogPath $script:CatalogPath -ErrorAction Stop } | Should -Not -Throw
+        { Get-DellWinPEDriverPackInfo -CatalogPath $script:CatalogPath -ErrorAction Stop } | Should -Not -Throw
     }
 }
 
