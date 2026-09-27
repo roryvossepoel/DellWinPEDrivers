@@ -30,7 +30,7 @@ jobs:
         shell: powershell
         run: |
           $manifest = Test-ModuleManifest ./DellWinPEDrivers.psd1 -ErrorAction Stop
-          if ($manifest.Version -ne [version]'1.0.0') {
+          if ($manifest.Version -ne [version]'1.0.1') {
               throw "Unexpected module version: $($manifest.Version)"
           }
 
