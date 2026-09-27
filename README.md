@@ -77,7 +77,7 @@ A successful save creates a package-specific folder containing the extracted Del
 
 ```text
 C:\WinPE\Dell\
-└── WinPE-11-A10-x64\
+└── WinPE-11.0-A10-x64\
     ├── ... extracted Dell driver folders ...
     └── .dellwinpe.json
 ```
