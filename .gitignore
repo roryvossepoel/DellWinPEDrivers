@@ -1,0 +1,4 @@
+*.cab
+DriverPackCatalog.xml
+DellWinPE.Manifest.json
+.vscode/
