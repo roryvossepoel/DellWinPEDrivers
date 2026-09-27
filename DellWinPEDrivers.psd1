@@ -1,6 +1,6 @@
 @{
     RootModule        = 'DellWinPEDrivers.psm1'
-    ModuleVersion     = '1.0.0'
+    ModuleVersion     = '1.0.1'
     GUID              = '50bd3f75-d8dc-48d1-8794-4657c9dc5f7d'
     Author            = 'Rory Vossepoel'
     CompanyName       = ''
@@ -9,7 +9,7 @@
     PowerShellVersion = '5.1'
 
     FunctionsToExport = @(
-        'Get-DellWinPEDriverPack'
+        'Get-DellWinPEDriverPackInfo'
         'Save-DellWinPEDriverPack'
         'New-DellWinPEManifest'
     )
@@ -23,7 +23,7 @@
             Tags       = @('Dell', 'WinPE', 'Drivers', 'Deployment', 'OSD', 'DellCommandDeploy', 'WindowsPE', 'Automation')
             LicenseUri = 'https://github.com/roryvossepoel/DellWinPEDrivers/blob/main/LICENSE'
             ProjectUri = 'https://github.com/roryvossepoel/DellWinPEDrivers'
-            ReleaseNotes = 'Initial stable release. Discovers Dell WinPE driver packs from DriverPackCatalog.cab, supports explicit WinPE version filtering, manifest generation, download/extraction, and PowerShell 5.1/7.'
+            ReleaseNotes = '1.0.1 renames Get-DellWinPEDriverPack to Get-DellWinPEDriverPackInfo to avoid a command-name conflict with the OSD PowerShell module.'
         }
     }
 }
