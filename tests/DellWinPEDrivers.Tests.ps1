@@ -4,7 +4,7 @@ BeforeAll {
     $script:CatalogPath = Join-Path $TestDrive 'DriverPackCatalog.xml'
     @'
 <?xml version="1.0" encoding="utf-8"?>
-<DriverPackManifest baseLocation="downloads.dell.com">
+<DriverPackManifest xmlns="openmanage/cm/dm" baseLocation="downloads.dell.com">
   <DriverPackage type="WinPE" dellVersion="A10" releaseID="XCXDW" path="FOLDER/WinPE11.cab" dateTime="2026-05-29T00:00:00">
     <Name><Display lang="en">Dell Command | Deploy WinPE 11.0 Driver Pack</Display></Name>
     <SupportedOperatingSystems>
@@ -49,6 +49,26 @@ Describe 'Get-DellWinPEDriverPack' {
         $result[0].DellVersion | Should -Be 'A10'
         $result[0].ReleaseId | Should -Be 'XCXDW'
     }
+
+    It 'parses WinPEVersion from the Dell package name' {
+        $result = Get-DellWinPEDriverPack -CatalogPath $script:CatalogPath |
+            Where-Object ReleaseId -EQ 'XCXDW' |
+            Select-Object -First 1
+
+        $result.WinPEVersion | Should -Be '11.0'
+    }
+
+    It 'filters explicitly by WinPE version' {
+        $result = @(Get-DellWinPEDriverPack -CatalogPath $script:CatalogPath -Architecture x64 -WinPEVersion '11.0')
+
+        $result.Count | Should -Be 1
+        $result[0].ReleaseId | Should -Be 'XCXDW'
+        $result[0].WinPEVersion | Should -Be '11.0'
+    }
+
+    It 'parses a Dell catalog that uses the production XML namespace' {
+        { Get-DellWinPEDriverPack -CatalogPath $script:CatalogPath -ErrorAction Stop } | Should -Not -Throw
+    }
 }
 
 Describe 'New-DellWinPEManifest' {
@@ -60,5 +80,15 @@ Describe 'New-DellWinPEManifest' {
         $manifest.Manufacturer | Should -Be 'Dell'
         @($manifest.Packages).Count | Should -Be 2
         @($manifest.Packages | Where-Object Type -ne 'WinPE').Count | Should -Be 0
+        $manifest.Packages[0].WinPEVersion | Should -Be '11.0'
+    }
+
+    It 'does not pass empty optional filters to discovery' {
+        $path = Join-Path $TestDrive 'manifest-no-filters.json'
+
+        { New-DellWinPEManifest -CatalogPath $script:CatalogPath -Path $path -ErrorAction Stop } | Should -Not -Throw
+
+        $manifest = Get-Content -LiteralPath $path -Raw | ConvertFrom-Json
+        @($manifest.Packages).Count | Should -Be 2
     }
 }
