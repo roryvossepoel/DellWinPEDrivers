@@ -112,11 +112,18 @@ function ConvertFrom-DellWinPEPackageNode {
     }
     $downloadUrl = if ($packagePath) { "$base/$packagePath" } else { $null }
 
+    $winPEVersion = $null
+    $versionSource = if ($displayName) { $displayName } else { [string]$Node.GetAttribute('path') }
+    if ($versionSource -match '(?i)WinPE(?<Version>\d+(?:\.\d+)?)') {
+        $winPEVersion = $Matches.Version
+    }
+
     foreach ($os in $operatingSystems) {
         [pscustomobject]@{
             PSTypeName      = 'DellWinPEDrivers.Package'
             Name            = $displayName
             Type            = [string]$Node.GetAttribute('type')
+            WinPEVersion    = $winPEVersion
             DellVersion     = [string]$Node.GetAttribute('dellVersion')
             ReleaseId       = [string]$Node.GetAttribute('releaseID')
             ReleaseDate     = $releaseDate
@@ -138,6 +145,9 @@ function Get-DellWinPEDriverPack {
         [Parameter()]
         [ValidateSet('x64', 'x86')]
         [string] $Architecture,
+
+        [Parameter()]
+        [string] $WinPEVersion,
 
         [Parameter()]
         [string] $MajorVersion,
@@ -183,6 +193,9 @@ function Get-DellWinPEDriverPack {
     if ($Architecture) {
         $packages = @($packages | Where-Object Architecture -EQ $Architecture)
     }
+    if ($WinPEVersion) {
+        $packages = @($packages | Where-Object WinPEVersion -EQ $WinPEVersion)
+    }
     if ($MajorVersion) {
         $packages = @($packages | Where-Object MajorVersion -EQ $MajorVersion)
     }
@@ -219,6 +232,9 @@ function New-DellWinPEManifest {
         [string] $Architecture,
 
         [Parameter()]
+        [string] $WinPEVersion,
+
+        [Parameter()]
         [string] $MajorVersion,
 
         [Parameter()]
@@ -230,6 +246,7 @@ function New-DellWinPEManifest {
 
     $getParams = @{}
     if ($PSBoundParameters.ContainsKey('Architecture')) { $getParams.Architecture = $Architecture }
+    if ($PSBoundParameters.ContainsKey('WinPEVersion')) { $getParams.WinPEVersion = $WinPEVersion }
     if ($PSBoundParameters.ContainsKey('MajorVersion')) { $getParams.MajorVersion = $MajorVersion }
     if ($PSBoundParameters.ContainsKey('MinorVersion')) { $getParams.MinorVersion = $MinorVersion }
     if ($PSBoundParameters.ContainsKey('CatalogPath')) { $getParams.CatalogPath = $CatalogPath }
@@ -245,6 +262,7 @@ function New-DellWinPEManifest {
             [ordered]@{
                 Name = $_.Name
                 Type = $_.Type
+                WinPEVersion = $_.WinPEVersion
                 DellVersion = $_.DellVersion
                 ReleaseId = $_.ReleaseId
                 ReleaseDate = if ($_.ReleaseDate) { $_.ReleaseDate.ToString('o') } else { $null }
@@ -277,6 +295,9 @@ function Save-DellWinPEDriverPack {
         [string] $Architecture = 'x64',
 
         [Parameter()]
+        [string] $WinPEVersion,
+
+        [Parameter()]
         [string] $MajorVersion,
 
         [Parameter()]
@@ -296,7 +317,15 @@ function Save-DellWinPEDriverPack {
         throw 'Save-DellWinPEDriverPack requires Windows because Dell driver CABs are extracted with expand.exe.'
     }
 
-    $packages = @(Get-DellWinPEDriverPack -Architecture $Architecture -MajorVersion $MajorVersion -MinorVersion $MinorVersion -CatalogPath $CatalogPath)
+    $getParams = @{
+        Architecture = $Architecture
+    }
+    if ($PSBoundParameters.ContainsKey('WinPEVersion')) { $getParams.WinPEVersion = $WinPEVersion }
+    if ($PSBoundParameters.ContainsKey('MajorVersion')) { $getParams.MajorVersion = $MajorVersion }
+    if ($PSBoundParameters.ContainsKey('MinorVersion')) { $getParams.MinorVersion = $MinorVersion }
+    if ($PSBoundParameters.ContainsKey('CatalogPath')) { $getParams.CatalogPath = $CatalogPath }
+
+    $packages = @(Get-DellWinPEDriverPack @getParams -ErrorAction Stop)
     $selected = Select-DellWinPEDriverPack -Package $packages
 
     if ([string]::IsNullOrWhiteSpace($selected.DownloadUrl)) {
@@ -366,6 +395,7 @@ function Save-DellWinPEDriverPack {
             SchemaVersion = 1
             Manufacturer = 'Dell'
             Name = $selected.Name
+            WinPEVersion = $selected.WinPEVersion
             DellVersion = $selected.DellVersion
             ReleaseId = $selected.ReleaseId
             ReleaseDate = if ($selected.ReleaseDate) { $selected.ReleaseDate.ToString('o') } else { $null }
