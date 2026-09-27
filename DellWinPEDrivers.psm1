@@ -26,9 +26,9 @@ function Get-DellCatalogDocument {
         }
 
         if ([System.IO.Path]::GetExtension($CatalogPath) -ieq '.xml') {
-            $document = [xml](Get-Content -LiteralPath $CatalogPath -Raw)
-            Write-Output -NoEnumerate $document
-            return
+            [System.Xml.XmlDocument] $document = New-Object System.Xml.XmlDocument
+            $document.Load($CatalogPath)
+            return ,$document
         }
 
         throw "CatalogPath must point to an extracted DriverPackCatalog.xml file."
@@ -45,7 +45,7 @@ function Get-DellCatalogDocument {
     New-Item -ItemType Directory -Path $tempRoot -Force | Out-Null
 
     try {
-        Invoke-WebRequest -Uri $script:DellCatalogUrl -OutFile $cabPath -UseBasicParsing
+        $null = Invoke-WebRequest -Uri $script:DellCatalogUrl -OutFile $cabPath -UseBasicParsing
 
         $expand = Join-Path $env:SystemRoot 'System32\expand.exe'
         if (-not (Test-Path -LiteralPath $expand)) {
@@ -58,9 +58,9 @@ function Get-DellCatalogDocument {
             throw "Failed to extract DriverPackCatalog.xml from Dell catalog CAB. expand.exe exit code: $expandExitCode"
         }
 
-        $document = [xml](Get-Content -LiteralPath $xmlPath -Raw)
-        Write-Output -NoEnumerate $document
-        return
+        [System.Xml.XmlDocument] $document = New-Object System.Xml.XmlDocument
+        $document.Load($xmlPath)
+        return ,$document
     }
     finally {
         if (Test-Path -LiteralPath $tempRoot) {
@@ -332,7 +332,7 @@ function Save-DellWinPEDriverPack {
     New-Item -ItemType Directory -Path $tempRoot -Force | Out-Null
 
     try {
-        Invoke-WebRequest -Uri $selected.DownloadUrl -OutFile $cabPath -UseBasicParsing
+        $null = Invoke-WebRequest -Uri $selected.DownloadUrl -OutFile $cabPath -UseBasicParsing
 
         if (Test-Path -LiteralPath $destination) {
             if ($Force) {
