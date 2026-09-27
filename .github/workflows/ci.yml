@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: '23 5 * * 1'
+
+jobs:
+  test:
+    name: PowerShell ${{ matrix.powershell }}
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        powershell: [ '5.1', '7' ]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Pester
+        shell: powershell
+        run: |
+          Set-PSRepository PSGallery -InstallationPolicy Trusted
+          Install-Module Pester -MinimumVersion 5.5.0 -Force -Scope CurrentUser
+
+      - name: Run tests on Windows PowerShell 5.1
+        if: matrix.powershell == '5.1'
+        shell: powershell
+        run: |
+          Import-Module Pester -MinimumVersion 5.5.0
+          Invoke-Pester -Path ./tests -Output Detailed
+
+      - name: Run tests on PowerShell 7
+        if: matrix.powershell == '7'
+        shell: pwsh
+        run: |
+          Import-Module Pester -MinimumVersion 5.5.0
+          Invoke-Pester -Path ./tests -Output Detailed
+
+  live-catalog:
+    name: Dell live catalog smoke test
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Import module and read Dell catalog
+        shell: pwsh
+        run: |
+          Import-Module ./DellWinPEDrivers.psd1 -Force
+          $packs = @(Get-DellWinPEDriverPack)
+          if ($packs.Count -lt 1) {
+              throw 'Dell catalog returned no WinPE driver packs.'
+          }
+          $packs | Format-Table Name, DellVersion, ReleaseDate, Architecture, MajorVersion, MinorVersion
+          New-DellWinPEManifest -Path ./DellWinPE.Manifest.json | Out-Null
