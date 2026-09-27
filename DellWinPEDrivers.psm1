@@ -50,9 +50,10 @@ function Get-DellCatalogDocument {
             throw 'expand.exe was not found.'
         }
 
-        $process = Start-Process -FilePath $expand -ArgumentList @($cabPath, '-F:DriverPackCatalog.xml', $tempRoot) -Wait -PassThru -NoNewWindow
-        if ($process.ExitCode -ne 0 -or -not (Test-Path -LiteralPath $xmlPath)) {
-            throw "Failed to extract DriverPackCatalog.xml from Dell catalog CAB. expand.exe exit code: $($process.ExitCode)"
+        & $expand $cabPath '-F:DriverPackCatalog.xml' $tempRoot
+        $expandExitCode = $LASTEXITCODE
+        if ($expandExitCode -ne 0 -or -not (Test-Path -LiteralPath $xmlPath)) {
+            throw "Failed to extract DriverPackCatalog.xml from Dell catalog CAB. expand.exe exit code: $expandExitCode"
         }
 
         return [xml](Get-Content -LiteralPath $xmlPath -Raw)
@@ -331,9 +332,10 @@ function Save-DellWinPEDriverPack {
             throw 'expand.exe was not found.'
         }
 
-        $process = Start-Process -FilePath $expand -ArgumentList @($cabPath, '-F:*', $destination) -Wait -PassThru -NoNewWindow
-        if ($process.ExitCode -ne 0) {
-            throw "Failed to extract Dell WinPE driver CAB. expand.exe exit code: $($process.ExitCode)"
+        & $expand $cabPath '-F:*' $destination
+        $expandExitCode = $LASTEXITCODE
+        if ($expandExitCode -ne 0) {
+            throw "Failed to extract Dell WinPE driver CAB. expand.exe exit code: $expandExitCode"
         }
 
         $metadata = [ordered]@{
