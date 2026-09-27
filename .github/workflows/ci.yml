@@ -59,9 +59,9 @@ jobs:
         shell: pwsh
         run: |
           Import-Module ./DellWinPEDrivers.psd1 -Force
-          $packs = @(Get-DellWinPEDriverPack)
+          $packs = @(Get-DellWinPEDriverPackInfo)
           if ($packs.Count -lt 1) {
               throw 'Dell catalog returned no WinPE driver packs.'
           }
-          $packs | Format-Table Name, DellVersion, ReleaseDate, Architecture, MajorVersion, MinorVersion
+          $packs | Format-Table Name, WinPEVersion, DellVersion, ReleaseDate, Architecture, MajorVersion, MinorVersion
           New-DellWinPEManifest -Path ./DellWinPE.Manifest.json | Out-Null
