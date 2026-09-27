@@ -139,7 +139,7 @@ function ConvertFrom-DellWinPEPackageNode {
     }
 }
 
-function Get-DellWinPEDriverPack {
+function Get-DellWinPEDriverPackInfo {
     [CmdletBinding()]
     param(
         [Parameter()]
@@ -251,7 +251,7 @@ function New-DellWinPEManifest {
     if ($PSBoundParameters.ContainsKey('MinorVersion')) { $getParams.MinorVersion = $MinorVersion }
     if ($PSBoundParameters.ContainsKey('CatalogPath')) { $getParams.CatalogPath = $CatalogPath }
 
-    $packages = @(Get-DellWinPEDriverPack @getParams -ErrorAction Stop)
+    $packages = @(Get-DellWinPEDriverPackInfo @getParams -ErrorAction Stop)
 
     $manifest = [ordered]@{
         SchemaVersion = 1
@@ -325,7 +325,7 @@ function Save-DellWinPEDriverPack {
     if ($PSBoundParameters.ContainsKey('MinorVersion')) { $getParams.MinorVersion = $MinorVersion }
     if ($PSBoundParameters.ContainsKey('CatalogPath')) { $getParams.CatalogPath = $CatalogPath }
 
-    $packages = @(Get-DellWinPEDriverPack @getParams -ErrorAction Stop)
+    $packages = @(Get-DellWinPEDriverPackInfo @getParams -ErrorAction Stop)
     $selected = Select-DellWinPEDriverPack -Package $packages
 
     if ([string]::IsNullOrWhiteSpace($selected.DownloadUrl)) {
@@ -431,7 +431,7 @@ function Save-DellWinPEDriverPack {
 }
 
 Export-ModuleMember -Function @(
-    'Get-DellWinPEDriverPack'
+    'Get-DellWinPEDriverPackInfo'
     'Save-DellWinPEDriverPack'
     'New-DellWinPEManifest'
 )
